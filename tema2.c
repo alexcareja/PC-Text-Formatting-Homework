@@ -12,7 +12,9 @@ int char_to_int(char *, int);
 char **prep_wrap(char **, char*, int *);
 char **wrap(char **, int *, int);
 char **prep_align_left(char **, char *, int *);
-char **align_left(char **, int, int, int);
+void align_left(char **, int, int);
+char **prep_align_right(char **, char *, int *);
+void align_right(char **, int, int, int);
 char **rm_trailing_whitespace(char **, int);
 
 int main(int argc, char *argv[]) {
@@ -99,7 +101,7 @@ int main(int argc, char *argv[]) {
      //printf( "%s\n", operations[i]);
      i--;
   }
-  
+
   clona_original = commands(operations, no_arguments, clona_original, &original_line_count);
   if (clona_original != NULL){
      for (i = 0; i <= original_line_count; i++){
@@ -154,10 +156,10 @@ char **commands(char **operations,
 	case 'c':
 	   break;
 	case 'l':
-	   original = prep_align_left(original, operations[i],original_line_count);
+	   original = prep_align_left(original, operations[i], original_line_count);
 	   break;
 	case 'r':
-	   printf("Allign right\n");
+	   original = prep_align_right(original, operations[i], original_line_count);
 	   break; 	
 	case 'j':
 	   printf("Justify\n");
@@ -351,19 +353,91 @@ char **prep_align_left(char **original, char *operations, int *original_line_cou
 	}
      }
   }
-  original = align_left(original, *original_line_count, start_line, end_line);
+  align_left(original, start_line, end_line);
   return original;
 }
 
-char **align_left(char **original, int original_line_count, int start_line, int end_line)
+void align_left(char **original, int start_line, int end_line)
 {
-  int i = start_line, j;
+  int i = start_line;
   for (; i <= end_line; i++){
      while ( original[i][0] == ' ' ){
         original[i]++;
      }
   }
+}
+
+char **prep_align_right(char **original, char *operations, int *original_line_count){
+  int start_line, end_line, k = 0; 
+  char *start_line_string, *end_line_string = NULL, 
+       *token = (char *) calloc(MAX_CHAR, sizeof(char));
+  token = strtok(operations, " ");
+  while ( token != NULL ){
+     k++;
+     if (k == 2){
+	start_line_string = token;
+     }
+     if (k == 3){
+	end_line_string = token;
+     }
+     if (k > 3){
+	printf("Invalid operation!\n");
+	return NULL;
+     }
+     token = strtok(NULL, " ");
+  }
+  free(token);
+  if (k == 1){
+     start_line = 0;
+     end_line = *original_line_count - 1;
+  }
+  else{
+     start_line = char_to_int(start_line_string, strlen(start_line_string));
+     if (start_line == -1){
+	printf("Invalid operation!\n");
+	return NULL;
+     }
+     if (end_line_string == NULL){
+	end_line = *original_line_count - 1;
+     }
+     else{
+	end_line = char_to_int(end_line_string, strlen(end_line_string));
+	if (end_line == -1){
+	   printf("Invalid operation!\n");
+	   return NULL;
+        }
+	if (end_line < start_line){
+	   printf("Invalid operation!\n");
+           return NULL;
+	}
+	if (end_line >= *original_line_count){
+	   end_line = *original_line_count - 1;
+	}
+     }
+  }
+  int max_length = strlen(original[0]);
+  for (k = 1; k < *original_line_count; k++){
+     if (strlen(original[k]) > max_length){
+	max_length = strlen(original[k]);
+     }
+  }
+  align_right(original, start_line, end_line, max_length);
   return original;
+}
+
+void align_right(char **original, int start_line, int end_line, int max_length){
+  int i, spaces;
+  char *line = (char *) calloc(1000, sizeof(char));
+  for (i = start_line; i <= end_line; i++){
+     spaces = max_length - strlen(original[i]);
+     while ( spaces ){
+	strcpy(line, original[i]);
+	strcpy(original[i], " ");
+	strcat(original[i], line);
+	spaces--;
+     }
+  }
+  free(line);
 }
 
 char **rm_trailing_whitespace(char **original, int original_line_count){
@@ -379,56 +453,5 @@ char **rm_trailing_whitespace(char **original, int original_line_count){
 	strcat(original[i], "\n");
      }
   }
-  /*char **text = (char **) calloc(1000, sizeof(char *));
-  if (text == NULL){
-     return original;
-  }
-  for (i = 0; i < 1000; i++){
-     text[i] = (char *) calloc(1000, sizeof(char));
-     if(text[i] == NULL){
-	return original;
-     }
-  }
-  for (i = 0; i < original_line_count; i++){
-     text[i] = original[i] + strlen(original[i]) -1;
-     while ( (text[i] > original[i]) && isspace((unsigned char)*text[i]) ){
-	text[i]--;
-     }
-     text[i][1] = '\0';
-  }*/
-  /*int i;
-  char *space;
-  for (i = 0; i < original_line_count; i++){
-     while ( original[i][strlen(original[i])] == ' ' ){
-	original[i][strlen(original[i])] = '\0';
-     }
-     /*space = strrchr(original[i], ' ');
-     while ( space != NULL ){ printf("%d..%c,",space, *(space-1));	
-	if ( *(space + 1) == '\0'){
-	   *space = '\0'; 
-	   space = strrchr(original[i], ' ');
-	}
-	else{
-	   break;
-	}
-     }*/
-     /*j = 0;
-     while ( original[i][j] != '\0'){
-	printf("%c ", original[i][j]);
-	if (original[i][j] !='\n'){
-	j++;}
-	else break;
-     } printf("%d\n",j);
-
-     while ( original[i][j] == ' ' ){
-	printf("ok");
-        memmove(&original[i][j], &original[i][j] + 1, 1);
-	j--;
-     }*/
-  //}
   return original;
 }
-
-/*
-
-*/
