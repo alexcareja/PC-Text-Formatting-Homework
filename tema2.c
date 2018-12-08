@@ -7,16 +7,18 @@
 
 char *strlwr(char *);
 char **commands(char **, int, char **, int *);
-char *split(char *, int, int);
-int char_to_int(char *, int);
+//char *split(char *, int, int);
+int char_to_int(char *);
 char **prep_wrap(char **, char*, int *);
 char **wrap(char **, int *, int);
-char **prep_center(char **, char *, int *);
+char **prep_center(char **, char *, int );
 void center(char **, int, int, int);
-char **prep_align_left(char **, char *, int *);
+char **prep_align_left(char **, char *, int );
 void align_left(char **, int, int);
-char **prep_align_right(char **, char *, int *);
+char **prep_align_right(char **, char *, int );
 void align_right(char **, int, int, int);
+char **prep_paragraph(char **, char*, int);
+void paragraph(char **, int, int, int);
 char **rm_trailing_whitespace(char **, int);
 
 int main(int argc, char *argv[]) {
@@ -156,19 +158,19 @@ char **commands(char **operations,
 	   original = prep_wrap(original, operations[i], original_line_count);
 	   break;
 	case 'c':
-	   original = prep_center(original, operations[i], original_line_count);
+	   original = prep_center(original, operations[i], *original_line_count);
 	   break;
 	case 'l':
-	   original = prep_align_left(original, operations[i], original_line_count);
+	   original = prep_align_left(original, operations[i], *original_line_count);
 	   break;
 	case 'r':
-	   original = prep_align_right(original, operations[i], original_line_count);
+	   original = prep_align_right(original, operations[i], *original_line_count);
 	   break; 	
 	case 'j':
 	   printf("Justify\n");
 	   break;
 	case 'p':
-	   printf("Paragraph\n");
+	   original = prep_paragraph(original, operations[i], *original_line_count);
 	   break;
 	case 'i':
 	   printf("List\n");
@@ -191,7 +193,7 @@ char **prep_wrap(char ** original, char *operations, int *original_line_count)
 {
   int k = 0;
   char *token = (char *) calloc(MAX_CHAR, sizeof(char));
-  char *number = (char *) calloc(MAX_CHAR, sizeof(char));
+  char *number = NULL;
   token = strtok(operations, " ");
   while ( token != NULL ){
      k++;
@@ -204,7 +206,12 @@ char **prep_wrap(char ** original, char *operations, int *original_line_count)
      }
      token = strtok(NULL, " ");
   }
-  int max_line_length = char_to_int(number, strlen(number));
+  free(token);
+  if (number == NULL){
+     printf("Invalid operation!\n");
+     return NULL; 
+  }
+  int max_line_length = char_to_int(number);
   if (max_line_length == -1){
      printf("Invalid operation!\n");
      return NULL; 
@@ -216,32 +223,11 @@ char **prep_wrap(char ** original, char *operations, int *original_line_count)
   return original;
 }
 
-char *split(char *ar, int token_needed, int max_tokens)
-{
-  char *token, *token_to_return;
-  char *array = (char *) calloc(20, sizeof(char));
-  strcpy(array,ar);
-  int i=0;
-  token = strtok(array, " ");
-  while ( token != NULL ) {
-     i++;
-     if (i == token_needed){
-        token_to_return = token;
-     }
-     if (i > max_tokens){
-        printf("Invalid operation!\n");
-	return NULL;
-     }
-     token = strtok(NULL, " ");
-  }
-  puts(token_to_return);
-  free(array);
-  return token_to_return;
-}
 
-int char_to_int(char *num_char, int length)
+
+int char_to_int(char *num_char)
 {
-  int pow_10 = 1, num_int = 0;
+  int pow_10 = 1, num_int = 0, length = strlen(num_char);
   length--;
   while ( length >= 0 ){
      if ( !isdigit(num_char[length]) ){
@@ -311,7 +297,7 @@ char **wrap(char **original, int *original_line_count, int max_line_length)
   return text;
 }
 
-char **prep_center(char **original, char *operations, int *original_line_count){
+char **prep_center(char **original, char *operations, int original_line_count){
   int start_line, end_line, k = 0; 
   char *start_line_string, *end_line_string = NULL, 
        *token = (char *) calloc(MAX_CHAR, sizeof(char));
@@ -333,19 +319,22 @@ char **prep_center(char **original, char *operations, int *original_line_count){
   free(token);
   if (k == 1){
      start_line = 0;
-     end_line = *original_line_count - 1;
+     end_line = original_line_count - 1;
   }
   else{
-     start_line = char_to_int(start_line_string, strlen(start_line_string));
+     start_line = char_to_int(start_line_string);
      if (start_line == -1){
 	printf("Invalid operation!\n");
 	return NULL;
      }
+     if (start_line > (original_line_count - 1)){
+	return original;
+     }
      if (end_line_string == NULL){
-	end_line = *original_line_count - 1;
+	end_line = original_line_count - 1;
      }
      else{
-	end_line = char_to_int(end_line_string, strlen(end_line_string));
+	end_line = char_to_int(end_line_string);
 	if (end_line == -1){
 	   printf("Invalid operation!\n");
 	   return NULL;
@@ -354,13 +343,13 @@ char **prep_center(char **original, char *operations, int *original_line_count){
 	   printf("Invalid operation!\n");
            return NULL;
 	}
-	if (end_line >= *original_line_count){
-	   end_line = *original_line_count - 1;
+	if (end_line >= original_line_count){
+	   end_line = original_line_count - 1;
 	}
      }
   }
   int max_length = strlen(original[0]);
-  for (k = 1; k < *original_line_count; k++){
+  for (k = 1; k < original_line_count; k++){
      if (strlen(original[k]) > max_length){
 	max_length = strlen(original[k]);
      }
@@ -385,7 +374,7 @@ void center(char **original, int start_line, int end_line, int max_length){
   free(line);
 }
 
-char **prep_align_left(char **original, char *operations, int *original_line_count){
+char **prep_align_left(char **original, char *operations, int original_line_count){
   int start_line, end_line, k = 0; 
   char *start_line_string, *end_line_string = NULL, 
        *token = (char *) calloc(MAX_CHAR, sizeof(char));
@@ -407,19 +396,22 @@ char **prep_align_left(char **original, char *operations, int *original_line_cou
   free(token);
   if (k == 1){
      start_line = 0;
-     end_line = *original_line_count;
+     end_line = original_line_count;
   }
   else{
-     start_line = char_to_int(start_line_string, strlen(start_line_string));
+     start_line = char_to_int(start_line_string);
      if (start_line == -1){
 	printf("Invalid operation!\n");
 	return NULL;
      }
+     if (start_line > (original_line_count)){
+	return original;
+     }
      if (end_line_string == NULL){
-	end_line = *original_line_count;
+	end_line = original_line_count;
      }
      else{
-	end_line = char_to_int(end_line_string, strlen(end_line_string));
+	end_line = char_to_int(end_line_string);
 	if (end_line == -1){
 	   printf("Invalid operation!\n");
 	   return NULL;
@@ -427,6 +419,9 @@ char **prep_align_left(char **original, char *operations, int *original_line_cou
 	if (end_line < start_line){
 	   printf("Invalid operation!\n");
            return NULL;
+	}
+	if (end_line >= original_line_count){
+	   end_line = original_line_count;
 	}
      }
   }
@@ -444,7 +439,7 @@ void align_left(char **original, int start_line, int end_line)
   }
 }
 
-char **prep_align_right(char **original, char *operations, int *original_line_count){
+char **prep_align_right(char **original, char *operations, int original_line_count){
   int start_line, end_line, k = 0; 
   char *start_line_string, *end_line_string = NULL, 
        *token = (char *) calloc(MAX_CHAR, sizeof(char));
@@ -466,19 +461,22 @@ char **prep_align_right(char **original, char *operations, int *original_line_co
   free(token);
   if (k == 1){
      start_line = 0;
-     end_line = *original_line_count - 1;
+     end_line = original_line_count - 1;
   }
   else{
-     start_line = char_to_int(start_line_string, strlen(start_line_string));
+     start_line = char_to_int(start_line_string);
      if (start_line == -1){
 	printf("Invalid operation!\n");
 	return NULL;
      }
+     if (start_line > (original_line_count - 1)){
+	return original;
+     }
      if (end_line_string == NULL){
-	end_line = *original_line_count - 1;
+	end_line = original_line_count - 1;
      }
      else{
-	end_line = char_to_int(end_line_string, strlen(end_line_string));
+	end_line = char_to_int(end_line_string);
 	if (end_line == -1){
 	   printf("Invalid operation!\n");
 	   return NULL;
@@ -487,13 +485,13 @@ char **prep_align_right(char **original, char *operations, int *original_line_co
 	   printf("Invalid operation!\n");
            return NULL;
 	}
-	if (end_line >= *original_line_count){
-	   end_line = *original_line_count - 1;
+	if (end_line >= original_line_count){
+	   end_line = original_line_count - 1;
 	}
      }
   }
   int max_length = strlen(original[0]);
-  for (k = 1; k < *original_line_count; k++){
+  for (k = 1; k < original_line_count; k++){
      if (strlen(original[k]) > max_length){
 	max_length = strlen(original[k]);
      }
@@ -512,6 +510,102 @@ void align_right(char **original, int start_line, int end_line, int max_length){
 	strcpy(original[i], " ");
 	strcat(original[i], line);
 	spaces--;
+     }
+  }
+  free(line);
+}
+
+char **prep_paragraph(char **original, char*operations, int original_line_count){
+  int indent_length, start_line, end_line, k = 0; 
+  char *indent_length_string ,*start_line_string, *end_line_string = NULL, 
+       *token = (char *) calloc(MAX_CHAR, sizeof(char));
+  token = strtok(operations, " ");
+  while ( token != NULL ){
+     k++;
+     if (k == 2){
+	indent_length_string = token;
+     }
+     if (k == 3){
+	start_line_string = token;
+     }
+     if (k == 4){
+	end_line_string = token;
+     }
+     if (k > 4){
+	printf("Invalid operation!\n");
+	return NULL;
+     }
+     token = strtok(NULL, " ");
+  }
+  free(token);
+  if (k == 1){
+     printf("Invalid operation!\n");
+     return NULL; 
+  }
+  else{
+     indent_length = char_to_int(indent_length_string);
+     if (indent_length == -1){
+	printf("Invalid operation!\n");
+	return NULL;
+     }
+     if (k >= 3){
+	start_line = char_to_int(start_line_string);
+	if (start_line == -1){
+	   printf("Invalid operation!\n");
+	   return NULL;
+	}
+	if (k == 4){
+	   end_line = char_to_int(end_line_string);
+	   if (end_line == -1){
+	      printf("Invalid operation!\n");
+	      return NULL;
+	   }
+	}
+	else{
+	   end_line = original_line_count;
+	}
+	if (end_line < start_line){
+	   printf("Invalid operation!\n");
+           return NULL;
+	}
+	if (end_line >= original_line_count){
+	   end_line = original_line_count;
+	}
+     }
+     else{
+	start_line = 0;
+	end_line = original_line_count;
+     }
+  }
+  paragraph(original, indent_length, start_line, end_line);
+  return original;
+}
+
+void paragraph(char **original, int indent_length, int start_line, int end_line){
+  int i, j, paragrafe[500], ok = 0;
+  char *line = (char *) calloc(1000, sizeof(int));
+  if (start_line == 0){
+     ok = 1;
+  }
+  else{
+     start_line --;
+  }
+  for (i = start_line; i <= end_line; i++){
+     while ( original[i][0] == ' ' ){
+	original[i]++;
+     }
+     // daca urmeaza alt paragraf
+     if (original[i][0] == '\n' ){
+	ok = 1;
+	continue;
+     }
+     if (ok){
+	for (j = 0; j < indent_length; j++){
+ 	   strcpy(line, original[i]);
+	   strcpy(original[i], " ");
+	   strcat(original[i], line);
+	}
+	ok = 0;
      }
   }
   free(line);
