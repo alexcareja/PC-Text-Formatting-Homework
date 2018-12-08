@@ -7,7 +7,6 @@
 
 char *strlwr(char *);
 char **commands(char **, int, char **, int *);
-//char *split(char *, int, int);
 int char_to_int(char *);
 char **prep_wrap(char **, char*, int *);
 char **wrap(char **, int *, int);
@@ -17,8 +16,12 @@ char **prep_align_left(char **, char *, int );
 void align_left(char **, int, int);
 char **prep_align_right(char **, char *, int );
 void align_right(char **, int, int, int);
-char **prep_paragraph(char **, char*, int);
+char **prep_paragraph(char **, char *, int);
 void paragraph(char **, int, int, int);
+char **prep_list(char **, char *, int);
+void num_list(char **, char *, int, int);
+void alphabetic_list(char **, char, char *, int, int);
+void bullet_list(char **, char *, int, int);
 char **rm_trailing_whitespace(char **, int);
 
 int main(int argc, char *argv[]) {
@@ -30,6 +33,7 @@ int main(int argc, char *argv[]) {
   char **operations = (char **) calloc(MAX_OP + 1, sizeof(char *));
   int original_line_count = 0,  // numarul de linii din input file
       result_line_count = 0,    // numarul de linii din output file
+      clona_original_line_count = 0,
       i,
       no_arguments;	// numarul de argumente
   if((original == NULL) || (clona_original == NULL)){
@@ -83,8 +87,9 @@ int main(int argc, char *argv[]) {
   for (i = 0; i < original_line_count; i++){
      strcpy(clona_original[i], original[i]);
   }
+  clona_original_line_count = original_line_count;
   // impartim sirul de operatii
-  argv[1] = strlwr(argv[1]);
+  //argv[1] = strlwr(argv[1]);
   i = 0;
   operations[i] = strtok(argv[1], ",");
   // parcurgem fiecare token
@@ -102,15 +107,19 @@ int main(int argc, char *argv[]) {
      while ( operations[i][0] == ' ' ){
         operations[i]++;
      }
+     operations[i][0] = tolower((unsigned char)operations[i][0]);
+//*c = tolower((unsigned char)*c);
      //printf( "%s\n", operations[i]);
      i--;
   }
 
-  clona_original = commands(operations, no_arguments, clona_original, &original_line_count);
+
+  clona_original = commands(operations, no_arguments, clona_original, &clona_original_line_count);
   if (clona_original != NULL){
-     for (i = 0; i <= original_line_count; i++){
+     for (i = 0; i <= clona_original_line_count; i++){
         strcpy(original[i], clona_original[i]);
      }
+     original_line_count = clona_original_line_count;
      original = rm_trailing_whitespace(original, original_line_count);
   }
   //original = rm_trailing_whitespace(original, original_line_count);
@@ -173,7 +182,7 @@ char **commands(char **operations,
 	   original = prep_paragraph(original, operations[i], *original_line_count);
 	   break;
 	case 'i':
-	   printf("List\n");
+	   original = prep_list(original, operations[i], *original_line_count);
 	   break;
 	case 'o':
 	   printf("Ord List\n");
@@ -222,8 +231,6 @@ char **prep_wrap(char ** original, char *operations, int *original_line_count)
   }
   return original;
 }
-
-
 
 int char_to_int(char *num_char)
 {
@@ -327,9 +334,6 @@ char **prep_center(char **original, char *operations, int original_line_count){
 	printf("Invalid operation!\n");
 	return NULL;
      }
-     if (start_line > (original_line_count - 1)){
-	return original;
-     }
      if (end_line_string == NULL){
 	end_line = original_line_count - 1;
      }
@@ -342,6 +346,9 @@ char **prep_center(char **original, char *operations, int original_line_count){
 	if (end_line < start_line){
 	   printf("Invalid operation!\n");
            return NULL;
+	}
+	if (start_line > (original_line_count - 1)){
+	   return original;
 	}
 	if (end_line >= original_line_count){
 	   end_line = original_line_count - 1;
@@ -554,6 +561,9 @@ char **prep_paragraph(char **original, char*operations, int original_line_count)
 	   printf("Invalid operation!\n");
 	   return NULL;
 	}
+	if (start_line > original_line_count){
+	   return original;
+	}
 	if (k == 4){
 	   end_line = char_to_int(end_line_string);
 	   if (end_line == -1){
@@ -582,7 +592,7 @@ char **prep_paragraph(char **original, char*operations, int original_line_count)
 }
 
 void paragraph(char **original, int indent_length, int start_line, int end_line){
-  int i, j, paragrafe[500], ok = 0;
+  int i, j, ok = 0;
   char *line = (char *) calloc(1000, sizeof(int));
   if (start_line == 0){
      ok = 1;
@@ -609,6 +619,117 @@ void paragraph(char **original, int indent_length, int start_line, int end_line)
      }
   }
   free(line);
+}
+
+char **prep_list(char **original, char *operations, int original_line_count){
+  int start_line, end_line, k = 0;
+  char *list_type, *special_char, *start_line_string, *end_line_string,
+       *token = (char *) calloc(MAX_CHAR, sizeof(char));
+  token = strtok(operations, " ");
+  while ( token != NULL ){
+     k++;
+     if (k == 2){
+	list_type = token;
+	if (strlen(list_type) > 1){
+	   printf("Invalid operation!\n");
+	   return NULL;
+	}
+     }
+     if (k == 3){
+	special_char = token;
+     }
+     if (k == 4){
+	start_line_string = token;
+     }
+     if (k == 5){
+	end_line_string = token;
+     }
+     if (k > 5){
+	printf("Invalid operation!\n");
+	return NULL;
+     }
+     token = strtok(NULL, " ");
+  }
+  free(token);
+  if (k < 3){
+     printf("Invalid operation!\n");
+     return NULL;
+  }
+  if (k > 3){
+     start_line = char_to_int(start_line_string);
+     if (start_line == -1){
+	printf("Invalid operation!\n");
+	return NULL;
+     }
+     if (k == 5){
+	end_line = char_to_int(end_line_string);
+	if (end_line == -1){
+	   printf("Invalid operation!\n");
+	   return NULL;
+	}
+	if (start_line > end_line){
+	   printf("Invalid operation!\n");
+           return NULL;
+	}
+	if (end_line >= original_line_count){
+	   end_line = original_line_count - 1;
+	}
+	if (start_line > original_line_count){
+	   return original;
+	}
+     }
+     else{
+	end_line = original_line_count - 1;
+     }
+  }
+  else{
+     start_line = 0;
+     end_line = original_line_count - 1;
+  }
+  switch (list_type[0]){
+     case 'n':
+	num_list(original, special_char, start_line, end_line);
+	break;
+     case 'a':
+	alphabetic_list(original, list_type[0], special_char, start_line, end_line);
+	break;
+     case 'A':
+	alphabetic_list(original, list_type[0], special_char, start_line, end_line);
+	break;
+     case 'b':
+	bullet_list(original, special_char, start_line, end_line);
+	break;
+     default:
+	break;
+  }
+  return original;  
+}
+
+void num_list(char **original, char *special_char, int start_line, int end_line){
+  int i, num;
+  char *line = (char *) calloc(1000, sizeof(char));
+  for (i = start_line, num = 1; i <= end_line; i++, num++){
+     strcpy(line, original[i]);
+     sprintf(original[i], "%d%s %s", num, special_char, line);
+  }
+}
+
+void alphabetic_list(char **original, char counter, char *special_char, int start_line, int end_line){
+  int i;
+  char *line = (char *) calloc(1000, sizeof(char));
+  for (i = start_line; i <= end_line; i++, counter++){
+     strcpy(line, original[i]);
+     sprintf(original[i], "%c%s %s", counter, special_char, line);
+  }
+}
+
+void bullet_list(char **original, char *bullet, int start_line, int end_line){
+  int i;
+  char *line = (char *) calloc(1000, sizeof(char));
+  for (i = start_line; i <= end_line; i++){
+     strcpy(line, original[i]);
+     sprintf(original[i], "%s %s", bullet, line);
+  }
 }
 
 char **rm_trailing_whitespace(char **original, int original_line_count){
