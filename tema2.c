@@ -16,8 +16,8 @@ char **prep_align_left(char **, char *, int );
 void align_left(char **, int, int);
 char **prep_align_right(char **, char *, int );
 void align_right(char **, int, int, int);
-//char **prep_justify(char **, char *, int);
-//char **justify(char **, int, int);
+char **prep_justify(char **, char *, int);
+char **justify(char **, int, int);
 char **prep_paragraph(char **, char *, int);
 void paragraph(char **, int, int, int);
 char **prep_list(char **, char *, int);
@@ -179,7 +179,7 @@ char **commands(char **operations,
 	   original = prep_align_right(original, operations[i], *original_line_count);
 	   break; 	
 	case 'j':
-	   //original = prep_justify(original, operations[i], *original_line_count);
+	   original = prep_justify(original, operations[i], *original_line_count);
 	   break;
 	case 'p':
 	   original = prep_paragraph(original, operations[i], *original_line_count);
@@ -440,7 +440,10 @@ void align_left(char **original, int start_line, int end_line)
 {
   int i = start_line;
   for (; i <= end_line; i++){
-     while ( original[i][0] == ' ' ){
+     if (original[i][0] == '\n'){
+	continue;
+     }
+     while ( isspace(original[i][0]) ){
         original[i]++;
      }
   }
@@ -521,7 +524,7 @@ void align_right(char **original, int start_line, int end_line, int max_length){
   }
   free(line);
 }
-/*
+
 char **prep_justify(char **original, char *operations, int original_line_count){
   int start_line, end_line, k = 0; 
   char *start_line_string, *end_line_string = NULL, 
@@ -542,14 +545,74 @@ char **prep_justify(char **original, char *operations, int original_line_count){
      token = strtok(NULL, " ");
   }
   free(token);
-  start_line = char_to_int(start_line_string);
-  end_line = char_to_int(end_line_string);
+  if (k < 2){
+     start_line = 0;
+     end_line = original_line_count;
+  }
+  else{
+     start_line = char_to_int(start_line_string);
+     if (k == 3){
+	end_line = char_to_int(end_line_string);
+     }
+     else{
+	end_line = original_line_count;
+     }
+  }
+  align_left(original, start_line, end_line);
   return justify(original, start_line, end_line);
 }
 
 char **justify(char **original, int start_line, int end_line){
-
-}*/
+  int k, i, line_length, max_length = strlen(original[start_line]), token_count, spaces, extra_spaces;
+  char *line = (char *) calloc(1000, sizeof(char)), 
+       *token = (char *) calloc(1000, sizeof(char));
+  for (k = start_line + 1; k <= end_line ; k++){
+     if (strlen(original[k]) > max_length){
+	max_length = strlen(original[k]);
+     }
+  }
+  for (k = end_line ; k >= start_line ; k--){
+     // daca linia este un paragraf
+     if (original[k][0] == '\n'){
+	continue;
+     }
+     // daca este ultima linie dintr-un paragraf
+     if (original[k + 1][0] == '\n'){
+	continue;
+     }
+     token_count = 0;
+     strcpy(line, original[k]);
+     line_length = strlen(line);
+     token = strtok(line, " ");
+     while ( token != NULL ){
+	token_count++;
+	token = strtok(NULL, " ");
+     }
+     spaces = 1;
+     spaces += (max_length - line_length) / (token_count - 1);
+     extra_spaces = (max_length - line_length) % (token_count - 1);
+     // printf("%d: %d\n", k, spaces);
+     strcpy(line, original[k]);
+     original[k][0] = '\0';
+     token = strtok(line, " ");
+     while ( token != NULL ){
+	strcat(original[k], token);
+	i = 0;
+	while ( i < spaces ){
+	   strcat(original[k], " ");
+	   i ++;
+	}
+	if (extra_spaces){
+	   extra_spaces--;
+	   strcat(original[k], " ");
+	}
+	token = strtok(NULL, " ");
+     }
+  }
+  free(line);
+  free(token);
+  return original;
+}
 
 char **prep_paragraph(char **original, char *operations, int original_line_count){
   int indent_length, start_line, end_line, k = 0; 
