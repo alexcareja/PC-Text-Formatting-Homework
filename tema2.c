@@ -16,6 +16,8 @@ char **prep_align_left(char **, char *, int );
 void align_left(char **, int, int);
 char **prep_align_right(char **, char *, int );
 void align_right(char **, int, int, int);
+//char **prep_justify(char **, char *, int);
+//char **justify(char **, int, int);
 char **prep_paragraph(char **, char *, int);
 void paragraph(char **, int, int, int);
 char **prep_list(char **, char *, int);
@@ -28,9 +30,8 @@ char **rm_trailing_whitespace(char **, int);
 
 int main(int argc, char *argv[]) {
   char buf[1000],               // buffer folosit pentru citirea din fisier
-      //original[1000][1000],     // textul original, linie cu linie
       result[1000][1000];      // textul obtinut dupa aplicarea operatiilor
-  char **original = (char **) calloc(1000, sizeof(char *));
+  char **original = (char **) calloc(1000, sizeof(char *));   // textul original
   char **clona_original = (char **) calloc(1000, sizeof(char *));
   char **operations = (char **) calloc(MAX_OP + 1, sizeof(char *));
   int original_line_count = 0,  // numarul de linii din input file
@@ -178,7 +179,7 @@ char **commands(char **operations,
 	   original = prep_align_right(original, operations[i], *original_line_count);
 	   break; 	
 	case 'j':
-	   printf("Justify\n");
+	   //original = prep_justify(original, operations[i], *original_line_count);
 	   break;
 	case 'p':
 	   original = prep_paragraph(original, operations[i], *original_line_count);
@@ -265,9 +266,6 @@ char **wrap(char **original, int *original_line_count, int max_line_length)
   line = 0;
   char_count = 0;
   for (i = 0; i < *original_line_count; i++){
-     while ( original[i][0] == ' ' ){
-        original[i]++;
-     }
      // daca urmeaza alt paragraf
      if (original[i][0] == '\n' ){
 	line += 2;
@@ -300,8 +298,8 @@ char **wrap(char **original, int *original_line_count, int max_line_length)
      }
   }
   for (i = 0; i <= line; i++){
-	      strcat(text[i],"\n");
-  	   }
+     strcat(text[i],"\n");
+  }
   *original_line_count = line;
   return text;
 }
@@ -523,8 +521,37 @@ void align_right(char **original, int start_line, int end_line, int max_length){
   }
   free(line);
 }
+/*
+char **prep_justify(char **original, char *operations, int original_line_count){
+  int start_line, end_line, k = 0; 
+  char *start_line_string, *end_line_string = NULL, 
+       *token = (char *) calloc(MAX_CHAR, sizeof(char));
+  token = strtok(operations, " ");
+  while ( token != NULL ){
+     k++;
+     if (k == 2){
+	start_line_string = token;
+     }
+     if (k == 3){
+	end_line_string = token;
+     }
+     if (k > 3){
+	printf("Invalid operation!\n");
+	return NULL;
+     }
+     token = strtok(NULL, " ");
+  }
+  free(token);
+  start_line = char_to_int(start_line_string);
+  end_line = char_to_int(end_line_string);
+  return justify(original, start_line, end_line);
+}
 
-char **prep_paragraph(char **original, char*operations, int original_line_count){
+char **justify(char **original, int start_line, int end_line){
+
+}*/
+
+char **prep_paragraph(char **original, char *operations, int original_line_count){
   int indent_length, start_line, end_line, k = 0; 
   char *indent_length_string ,*start_line_string, *end_line_string = NULL, 
        *token = (char *) calloc(MAX_CHAR, sizeof(char));
@@ -603,15 +630,15 @@ void paragraph(char **original, int indent_length, int start_line, int end_line)
      start_line --;
   }
   for (i = start_line; i <= end_line; i++){
-     while ( original[i][0] == ' ' ){
-	original[i]++;
-     }
      // daca urmeaza alt paragraf
      if (original[i][0] == '\n' ){
 	ok = 1;
 	continue;
      }
      if (ok){
+	while ( original[i][0] == ' ' ){
+	   original[i]++;
+        }
 	for (j = 0; j < indent_length; j++){
  	   strcpy(line, original[i]);
 	   strcpy(original[i], " ");
@@ -688,6 +715,7 @@ char **prep_list(char **original, char *operations, int original_line_count){
      start_line = 0;
      end_line = original_line_count - 1;
   }
+  align_left(original, start_line, end_line);
   switch (list_type[0]){
      case 'n':
 	num_list(original, special_char, start_line, end_line);
@@ -809,6 +837,7 @@ char **prep_olist(char **original, char *operations, int original_line_count){
      end_line = original_line_count - 1;
   }
   order(original, start_line, end_line, ordering[0]);
+  align_left(original, start_line, end_line);
   switch (list_type[0]){
      case 'n':
 	num_list(original, special_char, start_line, end_line);
