@@ -22,6 +22,8 @@ char **prep_list(char **, char *, int);
 void num_list(char **, char *, int, int);
 void alphabetic_list(char **, char, char *, int, int);
 void bullet_list(char **, char *, int, int);
+char **prep_olist(char **, char *, int);
+void order(char **, int, int, char);
 char **rm_trailing_whitespace(char **, int);
 
 int main(int argc, char *argv[]) {
@@ -185,7 +187,7 @@ char **commands(char **operations,
 	   original = prep_list(original, operations[i], *original_line_count);
 	   break;
 	case 'o':
-	   printf("Ord List\n");
+	   original = prep_olist(original, operations[i], *original_line_count);
 	   break;
 	default:
 	   printf("Invalid operation!\n");
@@ -700,6 +702,8 @@ char **prep_list(char **original, char *operations, int original_line_count){
 	bullet_list(original, special_char, start_line, end_line);
 	break;
      default:
+	printf("Invalid operation!\n");
+	return NULL;
 	break;
   }
   return original;  
@@ -730,6 +734,128 @@ void bullet_list(char **original, char *bullet, int start_line, int end_line){
      strcpy(line, original[i]);
      sprintf(original[i], "%s %s", bullet, line);
   }
+}
+
+char **prep_olist(char **original, char *operations, int original_line_count){
+  int start_line, end_line, k = 0;
+  char *list_type, *special_char, *start_line_string, *end_line_string, *ordering,
+       *token = (char *) calloc(MAX_CHAR, sizeof(char));
+  token = strtok(operations, " ");
+  while ( token != NULL ){
+     k++;
+     if (k == 2){
+	list_type = token;
+	if (strlen(list_type) > 1){
+	   printf("Invalid operation!\n");
+	   return NULL;
+	}
+     }
+     if (k == 3){
+	special_char = token;
+     }
+     if (k == 4){
+	ordering = token;
+	if ((ordering[0] != 'a') && (ordering[0] != 'z')){
+	   printf("Invalid operation!\n");
+	   return NULL;
+	}
+     }
+     if (k == 5){
+	start_line_string = token;
+     }
+     if (k == 6){
+	end_line_string = token;
+     }
+     if (k > 6){
+	printf("Invalid operation!\n");
+	return NULL;
+     }
+     token = strtok(NULL, " ");
+  }
+  free(token);
+  if (k < 4){
+     printf("Invalid operation!\n");
+     return NULL;
+  }
+  if (k > 4){
+     start_line = char_to_int(start_line_string);
+     if (start_line == -1){
+	printf("Invalid operation!\n");
+	return NULL;
+     }
+     if (k == 6){
+	end_line = char_to_int(end_line_string);
+	if (end_line == -1){
+	   printf("Invalid operation!\n");
+	   return NULL;
+	}
+	if (start_line > end_line){
+	   printf("Invalid operation!\n");
+           return NULL;
+	}
+	if (end_line >= original_line_count){
+	   end_line = original_line_count - 1;
+	}
+	if (start_line > original_line_count){
+	   return original;
+	}
+     }
+     else{
+	end_line = original_line_count - 1;
+     }
+  }
+  else{
+     start_line = 0;
+     end_line = original_line_count - 1;
+  }
+  order(original, start_line, end_line, ordering[0]);
+  switch (list_type[0]){
+     case 'n':
+	num_list(original, special_char, start_line, end_line);
+	break;
+     case 'a':
+	alphabetic_list(original, list_type[0], special_char, start_line, end_line);
+	break;
+     case 'A':
+	alphabetic_list(original, list_type[0], special_char, start_line, end_line);
+	break;
+     case 'b':
+	bullet_list(original, special_char, start_line, end_line);
+	break;
+     default:
+	printf("Invalid operation!\n");
+	return NULL;
+	break;
+  }
+  return original;  
+}
+
+void order(char **original, int start_line, int end_line, char ordering){
+  int i, j;
+  char *line = (char *) calloc(1000, sizeof(char));
+  if (ordering == 'a'){
+     for (i = start_line; i < end_line; i++){
+        for (j = i + 1; j <= end_line; j++){
+	   if (strcmp(original[i], original[j]) > 0){
+	      strcpy(line, original[i]);
+	      strcpy(original[i], original[j]);
+	      strcpy(original[j], line);
+	   }
+        }
+     }
+  }
+  else{
+     for (i = start_line; i < end_line; i++){
+        for (j = i + 1; j <= end_line; j++){
+	   if (strcmp(original[i], original[j]) < 0){
+	      strcpy(line, original[i]);
+	      strcpy(original[i], original[j]);
+	      strcpy(original[j], line);
+	   }
+        }
+     }
+  }
+  free(line);
 }
 
 char **rm_trailing_whitespace(char **original, int original_line_count){
