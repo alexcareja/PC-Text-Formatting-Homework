@@ -407,11 +407,7 @@ char **wrap(char **original, int *original_line_count, int max_line_length)
         i++;
      }
   }
-  /*for (j = 0; j <= no_paragraphs; j++){
-     free(paragraph[j]);
-  }
-  free(paragraph);*/
-  *original_line_count = i - 1;
+  *original_line_count = i ;
   return clona;
 }
 
