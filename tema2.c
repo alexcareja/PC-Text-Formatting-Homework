@@ -194,19 +194,24 @@ char **commands(char **operations, int no_arguments, char **original,
 	   original = prep_wrap(original, operations[i], original_line_count);
 	   break;
 	case 'c':
-	   original = prep_center(original, operations[i], *original_line_count);
+	   original = prep_center(original, operations[i], 
+				  *original_line_count);
 	   break;
 	case 'l':
-	   original = prep_align_left(original, operations[i], *original_line_count);
+	   original = prep_align_left(original, operations[i], 
+				      *original_line_count);
 	   break;
 	case 'r':
-	   original = prep_align_right(original, operations[i], *original_line_count);
+	   original = prep_align_right(original, operations[i], 
+				       *original_line_count);
 	   break; 	
 	case 'j':
-	   original = prep_justify(original, operations[i], *original_line_count);
+	   original = prep_justify(original, operations[i], 
+				   *original_line_count);
 	   break;
 	case 'p':
-	   original = prep_paragraph(original, operations[i], *original_line_count);
+	   original = prep_paragraph(original, operations[i], 
+				     s*original_line_count);
 	   break;
 	case 'i':
 	   original = prep_list(original, operations[i], *original_line_count);
@@ -492,7 +497,8 @@ void center(char **original, int start_line, int end_line, int max_length){
 // Se apeleaza align_left(...)
 // Se returneaza NULL atunci cand original nu trebuie modificat deloc
 // Se returneaza textul final in cazuri normale
-char **prep_align_left(char **original, char *operations, int original_line_count){
+char **prep_align_left(char **original, char *operations, 
+		       int original_line_count){
   int start_line, end_line, k = 0; 
   char *start_line_string, *end_line_string = NULL, 
        *token = (char *) calloc(MAX_CHAR_OP, sizeof(char));
@@ -570,7 +576,8 @@ void align_left(char **original, int start_line, int end_line)
 // Se apeleaza align_right(...)
 // Se returneaza NULL atunci cand original nu trebuie modificat deloc
 // Se returneaza textul final in cazuri normale
-char **prep_align_right(char **original, char *operations, int original_line_count){
+char **prep_align_right(char **original, char *operations, 
+			int original_line_count){
   int start_line, end_line, k = 0; 
   char *start_line_string, *end_line_string = NULL, 
        *token = (char *) calloc(MAX_CHAR_OP, sizeof(char));
@@ -699,7 +706,8 @@ char **prep_justify(char **original, char *operations, int original_line_count){
 // numarul de spatii pe care le adaugam in plus unul cate unul intre cuvinte in
 // ordine de la stanga la dreapta.
 char **justify(char **original, int start_line, int end_line){
-  int k, i, line_length, max_length = strlen(original[start_line]), token_count, spaces, extra_spaces;
+  int k, i, line_length, max_length = strlen(original[start_line]), token_count,
+      spaces, extra_spaces;
   char *line = (char *) calloc(MAX_CHAR_LINE, sizeof(char)), 
        *token = (char *) calloc(MAX_CHAR_LINE, sizeof(char));
   for (k = start_line + 1; k <= end_line ; k++){
@@ -754,7 +762,8 @@ char **justify(char **original, int start_line, int end_line){
 // apelam paragraph. 
 // returnam textul paragrafat daca avem o operatiune valida sau NULL in caz 
 // contrar
-char **prep_paragraph(char **original, char *operations, int original_line_count){
+char **prep_paragraph(char **original, char *operations, 
+		      int original_line_count){
   int indent_length, start_line, end_line, k = 0; 
   char *indent_length_string ,*start_line_string, *end_line_string = NULL, 
        *token = (char *) calloc(MAX_CHAR_OP, sizeof(char));
@@ -827,7 +836,8 @@ char **prep_paragraph(char **original, char *operations, int original_line_count
 // inceput n spatii
 // Variabila ok este 1 daca linia curenta este inceput de paragraf si 0 altfel
 // Daca ok este nenul, atunci adaugam spatii la inceputul liniei
-void paragraph(char **original, int indent_length, int start_line, int end_line){
+void paragraph(char **original, int indent_length, int start_line, 
+	       int end_line){
   int i, j, ok = 0;
   char *line = (char *) calloc(MAX_CHAR_LINE, sizeof(int));
   if (start_line == 0){
@@ -994,7 +1004,8 @@ void bullet_list(char **original, char *bullet, int start_line, int end_line){
 // ceruta inainte de apelarea acelorasi functii de liste
 char **prep_olist(char **original, char *operations, int original_line_count){
   int start_line, end_line, k = 0;
-  char *list_type, *special_char, *start_line_string, *end_line_string, *ordering,
+  char *list_type, *special_char, *start_line_string, *end_line_string, 
+       *ordering,
        *token = (char *) calloc(MAX_CHAR_OP, sizeof(char));
   token = strtok(operations, " ");
   while ( token != NULL ){
@@ -1071,10 +1082,12 @@ char **prep_olist(char **original, char *operations, int original_line_count){
 	num_list(original, special_char, start_line, end_line);
 	break;
      case 'a':
-	alphabetic_list(original, list_type[0], special_char, start_line, end_line);
+	alphabetic_list(original, list_type[0], special_char, start_line,
+			end_line);
 	break;
      case 'A':
-	alphabetic_list(original, list_type[0], special_char, start_line, end_line);
+	alphabetic_list(original, list_type[0], special_char, start_line, 
+			end_line);
 	break;
      case 'b':
 	bullet_list(original, special_char, start_line, end_line);
