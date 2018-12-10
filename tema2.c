@@ -251,57 +251,6 @@ int char_to_int(char *num_char)
 
 char **wrap(char **original, int *original_line_count, int max_line_length)
 {
-  /*int i, char_count, line;
-  char *token;
-  char **text = (char **) calloc(1000, sizeof(char *));
-  if (text == NULL){
-     return original;
-  }
-  for (i = 0; i < 1000; i++){
-     text[i] = (char *) calloc(1000, sizeof(char));
-     if(text[i] == NULL){
-	return original;
-     }
-  }
-  line = 0;
-  char_count = 0;
-  for (i = 0; i < *original_line_count; i++){
-     // daca urmeaza alt paragraf
-     if (original[i][0] == '\n' ){
-	line += 2;
-	char_count = 0;
-	continue;
-     }
-     token = strtok(original[i], " \n");
-     while ( token != NULL ){
-	if (strlen(token) > max_line_length){
-	   printf("Cannot wrap!\n");
-	   return NULL;
-	}
-	if (char_count == 0){
-	   strcpy(text[line], token);
-	   char_count = strlen(token);
-	}
-	else{
-	   if ((strlen(token) + char_count + 1) > max_line_length){
-	      strcpy(text[++line], token);
-	      char_count = strlen(token);
-	   }
-	   else{
-	      strcat(text[line], " ");
-	      strcat(text[line], token);
-	      char_count += strlen(token);
-	      char_count ++;
-	   }
-	}
-	token = strtok(NULL, " \n");
-     }
-  }
-  for (i = 0; i <= line; i++){
-     strcat(text[i],"\n");
-  }
-  *original_line_count = line;
-  return text;*/
   int i, j, k, new_paragraph, no_paragraphs, line_length; 
   char **paragraph = (char **) calloc(1000, sizeof(char *));
   char **clona = (char **) calloc(1000, sizeof(char *));
@@ -366,7 +315,7 @@ char **wrap(char **original, int *original_line_count, int max_line_length)
      i = 0;
      while( paragraph[j][i] != '\0'){
 	if(paragraph[j][i] == '\n'){
-	   memmove(paragraph[j] + i, paragraph[j] + i + 1, 600);
+	   memmove(paragraph[j] + i, paragraph[j] + i + 1, 700);
 	}
 	i++;
      }
@@ -388,7 +337,6 @@ char **wrap(char **original, int *original_line_count, int max_line_length)
 	      //puts(paragraph[j]);
 	      //printf("\n");
 	      paragraph[j] += max_line_length - k + 2;
-	      //memmove(paragraph[j], paragraph[j] + max_line_length -k + 1, 6000);
 	      //puts(paragraph[j]);
 	      //printf("\n");
 	      break;
