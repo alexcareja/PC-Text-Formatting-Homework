@@ -100,12 +100,6 @@ int main(int argc, char *argv[]) {
 
   fclose(input_file);
 
-  /*
-   * TODO apply operations in operation_string (argv[1]) one by one and save
-   * the result in the 'result' matrix.
-   * FREE PENTRU OPERATIONS SI ALTELE
-   * GRIJA LA TRAILING WHITESPACE - facut
-   */
   // copiem continutul originalului in clona
   for (i = 0; i < original_line_count; i++){
      strcpy(clona_original[i], original[i]);
