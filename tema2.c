@@ -251,7 +251,7 @@ int char_to_int(char *num_char)
 
 char **wrap(char **original, int *original_line_count, int max_line_length)
 {
-  int i, char_count, line;
+  /*int i, char_count, line;
   char *token;
   char **text = (char **) calloc(1000, sizeof(char *));
   if (text == NULL){
@@ -301,7 +301,118 @@ char **wrap(char **original, int *original_line_count, int max_line_length)
      strcat(text[i],"\n");
   }
   *original_line_count = line;
-  return text;
+  return text;*/
+  int i, j, k, new_paragraph, no_paragraphs, line_length; 
+  char **paragraph = (char **) calloc(1000, sizeof(char *));
+  char **clona = (char **) calloc(1000, sizeof(char *));
+  char * token;
+  if ((paragraph == NULL) || (clona == NULL)){
+     return original;
+  }
+  for (i = 0; i <= *original_line_count; i++){
+     paragraph[i] = (char *) calloc(10000, sizeof(char));
+     clona[i] = (char *) calloc(1000, sizeof(char));
+     if (paragraph[i] == NULL){
+	return original;
+     }
+  }
+  for (i = 0; i <= 1000; i++){
+     clona[i] = (char *) calloc(1000, sizeof(char));
+     if (clona[i] == NULL){
+	return original;
+     }
+  rm_trailing_whitespace(original, *original_line_count);
+  }
+  for (i = 0, j = 0, new_paragraph = 1; i < *original_line_count; i++){
+     // daca urmeaza alt paragraf
+     if (original[i][0] == '\n' ){
+	j++;
+	new_paragraph = 1;
+	continue;
+     }
+     if (new_paragraph){
+	new_paragraph = 0;
+	strcpy(paragraph[j], original[i]);
+	strcat(paragraph[j], " ");
+     }
+     else{
+	while (original[i][0] == ' '){
+	   original[i]++;
+	}
+	strcat(paragraph[j], original[i]);
+	strcat(paragraph[j], " ");
+     }
+     
+  }
+  // daca avem un cuvant mai mare decat max_line_length
+  for (i = 0; i < *original_line_count; i++){
+     // daca urmeaza alt paragraf
+     if (original[i][0] == '\n' ){
+	continue;
+     }
+     token = strtok(original[i], " \n");
+     while ( token != NULL ){
+	if (strlen(token) > max_line_length){
+	   printf("Cannot wrap!\n");
+	   return NULL;
+	
+	}
+	token = strtok(NULL, " \n");
+     }
+  }
+  no_paragraphs = j;
+  // eliminare '\n'
+  while(j >= 0){
+     i = 0;
+     while( paragraph[j][i] != '\0'){
+	if(paragraph[j][i] == '\n'){
+	   memmove(paragraph[j] + i, paragraph[j] + i + 1, 600);
+	}
+	i++;
+     }
+     //puts(paragraph[j]);
+     //printf("\n");
+     j--;
+  }
+  for (j = 0, i = 0; j <= no_paragraphs; j++){
+     line_length = strlen(paragraph[j]);
+     while(line_length > max_line_length){
+	k = 1;
+	while ( k ){
+	   if(isspace(paragraph[j][max_line_length - k + 1])){
+	      strncpy(clona[i], paragraph[j], max_line_length -k + 1);
+	      strcat(clona[i], "\n");
+		//puts(clona[i]);
+		//printf("\n");
+	      i++;
+	      //puts(paragraph[j]);
+	      //printf("\n");
+	      paragraph[j] += max_line_length - k + 2;
+	      //memmove(paragraph[j], paragraph[j] + max_line_length -k + 1, 6000);
+	      //puts(paragraph[j]);
+	      //printf("\n");
+	      break;
+	   }
+	   k++;
+	}
+	line_length = strlen(paragraph[j]);
+     }
+     if (line_length){
+	strcpy(clona[i], paragraph[j]);
+	strcat(clona[i], "\n");
+	i++;
+     }
+     if (j < no_paragraphs){
+        strcpy(clona[i], "\n");
+        i++;
+     }
+  }
+  /*for (j = 0; j <= no_paragraphs; j++){
+     free(paragraph[j]);
+  }
+  free(paragraph);*/
+  *original_line_count = i - 1;
+  return clona;
 }
 
 char **prep_center(char **original, char *operations, int original_line_count){
